@@ -1,4 +1,3 @@
-import "$std/dotenv/load.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 export type Scene = {
@@ -24,10 +23,14 @@ export type Item = {
     description?: string;
 }
 
-export const supabase = createClient(
-    Deno.env.get("SUPABASE_URL") || "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "",
-)
+const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+
+if (!supabaseUrl || !supabaseKey) {
+    throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY environment variables");
+}
+
+export const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function getSceneRaw(id: number): Promise<{
     id: number;
