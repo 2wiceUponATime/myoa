@@ -1,6 +1,8 @@
 import Session from "@/session.ts";
 import { getItem } from "@/db.ts";
 
+const SESSION_TIMEOUT = 1000 * 60 * 30;
+
 type ErrorResponse = {
     type: "error";
     error: string;
@@ -32,7 +34,11 @@ type ItemResponse = {
     count: number;
 }
 
-export async function getScene(session: Session): Promise<SceneResponse> {
+function until(time: number): Promise<void> {
+    return new Promise(resolve => { setTimeout(resolve, time - Date.now()) });
+}
+
+async function getScene(session: Session): Promise<SceneResponse> {
     await session.ready;
     const sceneData = session.scene;
     return {
@@ -82,6 +88,18 @@ export const handler = async (req: Request) => {
     let session: Session;
     if (data.id) {
         session = Session.sessions[data.id];
+        if (!session) {
+            return new Response(JSON.stringify({
+                type: "error",
+                error: "Invalid session",
+            }));
+        }
+        until(session.activity + SESSION_TIMEOUT).then(async () => {
+            while (Date.now() < session.activity - 1000) {
+                await until(session.activity + SESSION_TIMEOUT);
+            }
+            delete Session.sessions[data.id];
+        })
     } else {
         session = new Session();
     }

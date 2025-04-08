@@ -30,10 +30,15 @@ class Client {
             const json: PlayResponse = await response.json();
             if (json.type == "scene") {
                 this.scene = json;
+            } else if (json.type == "error") {
+                alert(json.error);
+                throw new Error(json.error);
             }
             return json;
         } else {
-            throw new Error(`Network error ${response.status}`);
+            const error = `Network error ${response.status}`;
+            alert(error);
+            throw new Error(error);
         }
     }
 }
