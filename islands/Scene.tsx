@@ -70,12 +70,12 @@ export default function Scene() {
                 action: "createOption",
                 option,
                 scene,
-            })
+            });
+            location.reload();
         })
         const client = new Client();
         function updateScene() {
             const scene = client.scene;
-            console.log(scene);
             if (!scene) {
                 throw new Error();
             }
@@ -93,8 +93,7 @@ export default function Scene() {
                 createOption.style.display = "block";
             }
             const itemEntries = Object.entries(scene.items);
-            itemsLabel.style.display = itemEntries.length ? "block" : "none"
-            console.log(items.style.display);
+            itemsLabel.style.display = itemEntries.length ? "block" : "none";
             if (itemEntries.length) {
                 items.replaceChildren(...Object.entries(scene.items).map(
                     ([id, item]) => {

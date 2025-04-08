@@ -115,7 +115,6 @@ export async function createOption(
     scene: string,
     required_item?: number,
 ) {
-    console.log("Creating:", option);
     const sceneResult = await supabase
         .from("scenes")
         .insert({
@@ -140,7 +139,6 @@ export async function createOption(
         throw optionResult.error;
     }
     const optionRow = optionResult.data[0];
-    console.log(optionRow);
     const sceneRow = await getSceneRaw(id);
     const updateResult = await supabase
         .from("scenes")
@@ -153,5 +151,3 @@ export async function createOption(
         throw updateResult.error;
     }
 }
-
-// console.log(await createOption(1, "Play", "Welcome to MYOA!"))
