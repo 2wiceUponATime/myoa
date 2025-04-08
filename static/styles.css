@@ -1,0 +1,17 @@
+.option {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.option, a {
+    color: #303060;
+}
+
+a {
+    text-decoration: none;
+    font-weight: bold;
+}
+
+a:hover {
+    text-decoration: underline;
+}
