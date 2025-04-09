@@ -8,12 +8,14 @@ export default function Home() {
                 game that you make.&nbsp;
                 <a href="https://github.com/2wiceUponATime/myoa">
                     View on GitHub
-                </a>
+                </a> <br/>
+                Feel free to share this page with others. The more adventurers, the merrier!
             </p>
             <p>
                 <strong>Note:</strong> This project is currently in alpha and
                 you may encounter silent failures or other bugs.
             </p>
+            <hr/>
             <Scene />
         </>
     );

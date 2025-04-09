@@ -23,8 +23,10 @@ export default class Session {
             defaultScene = scene;
         });
         until(this.activity + SESSION_TIMEOUT).then(async () => {
-            while (Date.now() < this.activity - 1000) {
-                await until(this.activity + SESSION_TIMEOUT);
+            let end = this.activity + SESSION_TIMEOUT;
+            while (Date.now() < end - 1000) {
+                await until(end);
+                end = this.activity + SESSION_TIMEOUT;
             }
             this.end();
         });
