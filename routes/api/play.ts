@@ -1,8 +1,6 @@
 import Session from "@/session.ts";
 import { getItem } from "@/db.ts";
 
-const SESSION_TIMEOUT = 1000 * 60 * 30;
-
 type ErrorResponse = {
     type: "error";
     error: string;
@@ -32,10 +30,6 @@ type ItemResponse = {
     name: string;
     description?: string;
     count: number;
-}
-
-function until(time: number): Promise<void> {
-    return new Promise(resolve => { setTimeout(resolve, time - Date.now()) });
 }
 
 async function getScene(session: Session): Promise<SceneResponse> {
@@ -94,22 +88,15 @@ export const handler = async (req: Request) => {
                 error: "Invalid session",
             }));
         }
-        until(session.activity + SESSION_TIMEOUT).then(async () => {
-            while (Date.now() < session.activity - 1000) {
-                await until(session.activity + SESSION_TIMEOUT);
-            }
-            delete Session.sessions[data.id];
-        })
     } else {
         session = new Session();
     }
     switch (data.action) {
         case "startSession": {
-            const id = crypto.randomUUID();
-            Session.sessions[id] = session;
+            Session.sessions[session.id] = session;
             result = {
                 type: "start",
-                id,
+                id: session.id,
                 scene: await getScene(session),
             }
             break;

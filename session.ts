@@ -1,10 +1,17 @@
 import { createOption, getScene, Scene } from "@/db.ts";
 
+const SESSION_TIMEOUT = 1000 * 60 * 20;
+
+function until(time: number): Promise<void> {
+    return new Promise(resolve => { setTimeout(resolve, time - Date.now()) });
+}
+
 export let defaultScene = await getScene(1);
 
 export default class Session {
     static sessions: Record<string, Session> = {};
 
+    id: string = crypto.randomUUID();
     scene: Scene = defaultScene;
     items: Record<number, number> = {};
     activity: number = Date.now();
@@ -14,7 +21,13 @@ export default class Session {
         this.ready = getScene(1).then(scene => {
             this.scene = scene;
             defaultScene = scene;
-        })
+        });
+        until(this.activity + SESSION_TIMEOUT).then(async () => {
+            while (Date.now() < this.activity - 1000) {
+                await until(this.activity + SESSION_TIMEOUT);
+            }
+            this.end();
+        });
     }
 
     addItem(id: number, count: number = 1) {
@@ -51,5 +64,10 @@ export default class Session {
         await createOption(this.scene.id, option, scene, required_item);
         this.scene = defaultScene;
         this.items = {};
+        this.end();
+    }
+
+    end() {
+        delete Session.sessions[this.id];
     }
 }
