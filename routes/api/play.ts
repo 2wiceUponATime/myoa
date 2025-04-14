@@ -1,118 +1,183 @@
-import Session from "@/session.ts";
-import { getItem } from "@/db.ts";
+import { createItem, createScene, ID, ItemMap, Items, Option, Scene, start } from "@/lib/db.ts";
+import Session from "@/lib/session.ts";
 
 type ErrorResponse = {
     type: "error";
-    error: string;
+    message: string;
 }
 
-export type StartResponse = {
-    type: "start";
-    id: string;
+type NewSessionResponse = {
+    type: "newSession";
+    id: ID;
     scene: SceneResponse;
 }
 
 export type SceneResponse = {
-    type: "scene";
-    value: string,
-    options: OptionResponse[],
-    items: ItemsResponse,
+    type: "getScene";
+    id: ID;
+    value: string;
+    options: OptionResponse[];
+    items: Items;
+    itemMap: ItemMap
 }
 
 type OptionResponse = {
     locked: boolean;
     value: string;
-}
+};
 
-type ItemsResponse = Record<number, ItemResponse>
+export type PlayResponse = ErrorResponse | SceneResponse | NewSessionResponse;
 
-type ItemResponse = {
-    name: string;
-    description?: string;
-    count: number;
-}
-
-async function getScene(session: Session): Promise<SceneResponse> {
-    await session.ready;
-    const sceneData = session.scene;
+async function getSceneResponse(session: Session): Promise<SceneResponse> {
+    const scene = session.scene;
+    let options: OptionResponse[];
+    if (scene.options.length == 1 && session.scene.id != start) {
+        options = [{
+            locked: true,
+            value: "Locked option",
+        }]
+    } else {
+        options = scene.options.map(option => {
+            if (session.has(option.requiredItems)) {
+                return {
+                    locked: false,
+                    value: option.value,
+                }
+            } else {
+                return {
+                    locked: true,
+                    value: "Locked option",
+                }
+            }
+        })
+    }
     return {
-        type: "scene",
-        value: sceneData.value,
-        options: sceneData.options.map(option => {
-            let locked = false;
-            if (option.required_item) {
-                locked = !session.items[option.required_item.id];
-            }
-            return {
-                locked,
-                value: locked ? "Locked option" : option.value,
-            }
-        }),
-        items: await getItems(session),
+        type: "getScene",
+        id: scene.id,
+        value: scene.value,
+        items: session.items,
+        itemMap: await session.getItems(),
+        options,
     }
 }
 
-async function getItems(session: Session): Promise<Record<number, ItemResponse>> {
-    const promises = [];
-    const result: Record<number, ItemResponse> = {};
-    for (const index in session.items) {
-        const id = parseInt(index);
-        const count = session.items[id];
-        promises.push(getItem(id).then(item => {
-            result[id] = {
-                name: item.name,
-                count,
-            }
-            if (item.description) {
-                result[id].description = item.description;
-            }
-        }));
-    }
-    for (const promise of promises) {
-        await promise;
-    }
-    return result;
+export type OptionRequest = {
+    action: "newOption";
+    session: ID;
+    newItems: ItemMap;
+    newScenes: Record<ID, Scene>;
+    option: Option;
 }
 
-export type PlayResponse = ErrorResponse | StartResponse | SceneResponse;
+export type RequestData = {
+    action: "newSession";
+} | {
+    action: "chooseOption";
+    session: ID;
+    option: number;
+} | {
+    action: "getScene";
+    session: ID;
+} | OptionRequest;
+
+async function handle(data: RequestData): Promise<PlayResponse> {
+    async function respond(response?: string | PlayResponse) {
+        if (!response) {
+            response = await getSceneResponse(session);
+        }
+        if (typeof response == "string") {
+            response = {
+                type: "error",
+                message: response,
+            }
+        }
+        return response;
+    }
+    if (data.action == "newSession") {
+        const session = new Session();
+        await session.ready;
+        return respond({
+            type: "newSession",
+            id: session.id,
+            scene: await getSceneResponse(session),
+        });
+    }
+    const session = Session.sessions[data.session];
+    
+    const newItems: Record<ID, ID> = {};
+    async function createItems(items: Items) {
+        if (data.action != "newOption") {
+            return;
+        }
+        for (const [id, count] of Object.entries(items)) {
+            const itemId = id as ID;
+
+            if (itemId in data.newItems && !newItems[itemId]) {
+                const newItem = data.newItems[itemId];
+                newItems[itemId] = await createItem(
+                    newItem.name,
+                    newItem.description,
+                );
+            }
+
+            if (newItems[itemId]) {
+                items[newItems[itemId]] = count;
+                delete items[itemId];
+            }
+        }
+    }
+    if (!session) {
+        return await respond("Sesion not found");
+    }
+    switch (data.action) {
+        case "chooseOption":
+            await session.choose(data.option);
+            return respond();
+        case "getScene":
+            return respond();
+        case "newOption": {
+            const option = data.option;
+            const requiredItems: Items = option.requiredItems;
+            await createItems(requiredItems);
+            const newScenes: Record<ID, ID> = {};
+            const newOption: Option = {
+                value: option.value,
+                requiredItems: option.requiredItems,
+                link: await Promise.all(option.link.map(async link => {
+                    const value = link.value;
+                    if (value in data.newScenes) {
+                        if (!(value in newScenes)) {
+                            const newScene = data.newScenes[value];
+                            await createItems(newScene.items);
+                            newScenes[value] = await createScene(newScene.value, newScene.items);
+                        }
+                        link.value = newScenes[value];
+                    }
+                    return link;
+                }))
+            }
+            await session.createOption(newOption);
+            return respond();
+        }
+        default:
+            return respond("Invalid action");
+    }
+}
 
 export const handler = async (req: Request) => {
     const data = await req.json();
-    let result: PlayResponse = { type: "error", error: "Invalid action" };
-    let session: Session;
-    if (data.id) {
-        session = Session.sessions[data.id];
-        if (!session) {
-            return new Response(JSON.stringify({
-                type: "error",
-                error: "Invalid session",
-            }));
+    const promises: Promise<PlayResponse>[] = [];
+    const result: PlayResponse[] = [];
+    for (const item of data.requests) {
+        const promise = handle(item);
+        if (data.parallel) {
+            promises.push(promise);
+        } else {
+            result.push(await promise);
         }
-    } else {
-        session = new Session();
     }
-    switch (data.action) {
-        case "startSession": {
-            Session.sessions[session.id] = session;
-            result = {
-                type: "start",
-                id: session.id,
-                scene: await getScene(session),
-            }
-            break;
-        }
-        case "choose":
-            await session.choose(data.option);
-            /* falls through */
-        case "getScene":
-            result = await getScene(session);
-            break;
-        case "createOption":
-            await session.createOption(data.option, data.scene, data.required_item);
-            result = await getScene(session);
-            break;
-        default:
-            break;
+    for (const promise of promises) {
+        result.push(await promise);
     }
-    return new Response(JSON.stringify(result));
+    return Response.json(result);
 }

@@ -8,6 +8,5 @@ export async function handler(
     if(!url.pathname.startsWith("/_frsh/")) {
         console.log(req.method, url.pathname);
     }
-    const response = await ctx.next();
-    return response;
+    return await ctx.next();
 }

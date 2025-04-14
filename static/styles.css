@@ -1,17 +1,141 @@
-.option {
-    text-decoration: underline;
+* {
+    padding: 0;
+    margin: 0;
+}
+
+#main {
+    font-family: sans-serif;
+    height: 100vh;
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+    > * {
+        padding: 10px;
+    }
+}
+
+header {
+    display: flex;
+    background-color: #c0c0ff;
+    padding-left: 15px !important;
+    * {
+        margin: auto;
+        vertical-align: middle;
+    }
+    img {
+        max-height: 40px;
+    }
+}
+
+ul {
+    padding-left: 40px;
+}
+
+li {
+    padding-block: 0.2em;
+}
+
+p {
+    margin-block-end: 1em;
+}
+
+button, input, select {
+    margin-inline: 3px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.right {
+    display: inline-block;
+    text-align: right;
+    flex: 1;
+    font-size: 1.3em;
+    > * {
+        padding-right: 20px;
+    }
+}
+
+.small {
+    font-size: 0.8em !important;
+}
+
+.background {
+    background-color: #24292f;
+}
+
+.content {
+    flex-grow: 1;
+    display: grid;
+    place-items: center;
+}
+
+.panel, .popup {
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 5px 5px 10px black;
+    background-color: white;
+    overflow-y: auto;
+}
+
+.panel {
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 10px;
+    width: 50%;
+    height: 50%;
+}
+
+.popup-background {
+    display: grid;
+    place-items: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #00000080;
+}
+
+.popup {
+    margin-left: auto;
+    margin-right: auto;
+    width: 40%;
+    height: 40%;
+}
+
+.wide {
+    width: 100%;
+}
+
+.box {
+    border: 1px solid #404040;
+    padding: 10px;
+    margin-block: 5px;
+    border-radius: 10px;
+}
+
+button {
+    padding-inline: 6px;
+    padding-block: 1px;
+}
+
+a, .link {
+    color: #204020;
+    text-decoration: none;
+    font-weight: bold;
     cursor: pointer;
 }
 
-.option, a {
-    color: #303060;
+link[data-locked] {
+    cursor: auto;
 }
 
-a {
-    text-decoration: none;
-    font-weight: bold;
-}
-
-a:hover {
+a:hover, .link:hover:not([data-locked]) {
     text-decoration: underline;
+}
+
+hr {
+    margin-block: 0.5em;
 }
