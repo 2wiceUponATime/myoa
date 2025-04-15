@@ -181,6 +181,19 @@ function OptionLinks(props: {
         <div>
             {...state.value.option.link.map((link, index) => (
                 <div>
+                    <Button
+                        onClick={() => {
+                            const link = state.value.option.link;
+                            link.splice(index, 1);
+                            state.value = {
+                                ...state.value,
+                                option: {
+                                    ...state.value.option,
+                                    link,
+                                }
+                            }
+                        }}
+                    > &times; </Button>
                     <SelectScene
                         state={state}
                         value={link.value}

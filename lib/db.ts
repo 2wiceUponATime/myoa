@@ -79,10 +79,11 @@ function toObject<
     )) as unknown as Record<K, V>;
 }
 
-export async function getItems(ids: ID[]) {
+export async function getItems(ids: ID[]): Promise<ItemMap> {
     const results = (await kv.getMany(ids.map(id => ["items", id])))
         .values()
-        .toArray() as unknown as Item[];
+        .toArray()
+        .map(result => result.value) as Item[]
     return toObject(ids, results);
 }
 
