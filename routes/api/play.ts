@@ -26,6 +26,10 @@ type OptionResponse = {
     value: string;
 };
 
+class PlayError extends Error {
+    override name: string = "PlayError";
+}
+
 export type PlayResponse = ErrorResponse | SceneResponse | NewSessionResponse;
 
 async function getSceneResponse(session: Session): Promise<SceneResponse> {
@@ -114,6 +118,15 @@ async function handle(data: RequestData): Promise<PlayResponse> {
 
             if (itemId in data.newItems && !newItems[itemId]) {
                 const newItem = data.newItems[itemId];
+                if (!newItem.name) {
+                    throw new PlayError("Item name is required");
+                }
+                if (newItem.name.length > 50) {
+                    throw new PlayError("Item name cannot be more than 50 characters");
+                }
+                if (newItem.description?.length || 0 > 100) {
+                    throw new PlayError("Item description cannot be more than 100 characters");
+                }
                 newItems[itemId] = await createItem(
                     newItem.name,
                     newItem.description,
@@ -127,7 +140,7 @@ async function handle(data: RequestData): Promise<PlayResponse> {
         }
     }
     if (!session) {
-        return await respond("Sesion not found");
+        throw new PlayError("Session not found - try reloading the page");
     }
     switch (data.action) {
         case "chooseOption":
@@ -137,6 +150,12 @@ async function handle(data: RequestData): Promise<PlayResponse> {
             return respond();
         case "newOption": {
             const option = data.option;
+            if (!option.value) {
+                throw new PlayError("Option name is required");
+            }
+            if (option.value.length > 50) {
+                throw new PlayError("Option name cannot be more than 50 characters");
+            }
             const requiredItems: Items = option.requiredItems;
             await createItems(requiredItems);
             const newScenes: Record<ID, ID> = {};
@@ -148,6 +167,12 @@ async function handle(data: RequestData): Promise<PlayResponse> {
                     if (value in data.newScenes) {
                         if (!(value in newScenes)) {
                             const newScene = data.newScenes[value];
+                            if (!newScene.value) {
+                                throw new PlayError("Scene description is required");
+                            }
+                            if (newScene.value.length > 500) {
+                                throw new PlayError("Scene cannot be more than 500 characters");
+                            }
                             await createItems(newScene.items);
                             newScenes[value] = await createScene(newScene.value, newScene.items);
                         }
@@ -160,16 +185,29 @@ async function handle(data: RequestData): Promise<PlayResponse> {
             return respond();
         }
         default:
-            return respond("Invalid action");
+            throw new PlayError("Invalid action");
     }
 }
 
 export const handler = async (req: Request) => {
+    async function getResponse(request: RequestData): Promise<PlayResponse> {
+        try {
+            return await handle(request);
+        } catch (err) {
+            if (!(err instanceof PlayError)) {
+                throw err;
+            }
+            return {
+                type: "error",
+                message: err.message,
+            };
+        }
+    }
     const data = await req.json();
     const promises: Promise<PlayResponse>[] = [];
     const result: PlayResponse[] = [];
     for (const item of data.requests) {
-        const promise = handle(item);
+        const promise = getResponse(item);
         if (data.parallel) {
             promises.push(promise);
         } else {
