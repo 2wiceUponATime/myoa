@@ -493,11 +493,13 @@ export default function NewOption(props: {
             <hr/>
             <Button class="wide" onClick={async () => {
                 await client.ready;
-                await client.send({
+                const [result] = await client.send({
                     action: "newOption",
                     ...state.value,
                 });
-                location.reload();
+                if (result.type != "error") {
+                    location.reload();
+                }
             }}>
                 Create Option
             </Button>
