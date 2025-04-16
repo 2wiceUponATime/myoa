@@ -1,4 +1,4 @@
-import { createItem, createScene, ID, ItemMap, Items, Option, Scene, start } from "@/lib/db.ts";
+import { commit, createItem, createScene, ID, ItemMap, Items, Option, Scene, start } from "@/lib/db.ts";
 import Session from "@/lib/session.ts";
 
 type ErrorResponse = {
@@ -26,7 +26,7 @@ type OptionResponse = {
     value: string;
 };
 
-class PlayError extends Error {
+export class PlayError extends Error {
     override name: string = "PlayError";
 }
 
@@ -181,7 +181,7 @@ async function handle(data: RequestData): Promise<PlayResponse> {
                         if (!(value in newScenes)) {
                             const newScene = data.newScenes[value];
                             await createItems(newScene.items);
-                            newScenes[value] = await createScene(newScene.value, newScene.items);
+                            newScenes[value] = createScene(newScene.value, newScene.items);
                         }
                         link.value = newScenes[value];
                     }
@@ -224,5 +224,6 @@ export const handler = async (req: Request) => {
     for (const promise of promises) {
         result.push(await promise);
     }
+    commit();
     return Response.json(result);
 }

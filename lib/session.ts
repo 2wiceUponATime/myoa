@@ -1,5 +1,6 @@
 import { createOption, getItems, getScene, ID, ItemMap, Items, Option, Scene, start } from "./db.ts";
 import { unimplemented } from "$std/assert/unimplemented.ts";
+import { PlayError } from "@/routes/api/play.ts";
 
 const SESSION_TIMEOUT = 1000 * 60 * 20;
 
@@ -66,13 +67,19 @@ export default class Session {
 
     async choose(optionNumber: number) {
         if (this.scene.options.length <= 1 && this.scene.id != start) {
-            throw new Error("Cannot choose from 1 or 0 options");
+            throw new PlayError("Cannot choose from 1 or 0 options");
         }
         this.activity = Date.now();
         const option = this.scene.options[optionNumber];
+        if (!this.has(option.requiredItems)) {
+            throw new PlayError("Required items not found");
+        }
+        for (const [index, count] of Object.entries(option.requiredItems)) {
+            this.addItem(index as ID, -count);
+        }
         const totalWeight = option.link.reduce((acc, link) => acc + link.weight, 0);
         if (totalWeight === 0 || option.link.length === 0) {
-            throw new Error("No valid links to choose from");
+            throw new PlayError("No valid links to choose from");
         }
 
         const threshold = Math.random() * totalWeight;
@@ -89,9 +96,8 @@ export default class Session {
         if (!newScene) {
             unimplemented();
         }
-        for (const index in newScene.items) {
-            const item = index as ID;
-            this.addItem(item, newScene.items[item]);
+        for (const [index, count] of Object.entries(newScene.items)) {
+            this.addItem(index as ID, count);
         }
         this.scene = newScene;
         return this.scene;
@@ -100,7 +106,7 @@ export default class Session {
     async createOption(option: Option) {
         this.activity = Date.now();
         if (this.scene.options.length >= 4) {
-            throw new Error("Too many options");
+            throw new PlayError("Too many options");
         }
         this.scene = await createOption(this.scene.id, option);
         this.end();

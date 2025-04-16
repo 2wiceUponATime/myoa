@@ -1,6 +1,8 @@
 /// <reference lib="deno.unstable" />
 
 export const kv = await Deno.openKv();
+let tx = kv.atomic();
+let written = false;
 
 export const start = "bb179099-b85c-4558-8cb9-d658b0d42cce";
 
@@ -48,16 +50,17 @@ export async function getScene(id: string): Promise<Scene> {
     return (await kv.get(["scenes", id])).value as Scene;
 }
 
-export async function setScene(id: ID, value: Scene) {
-    await kv.set(["scenes", id], value);
+export function setScene(id: ID, value: Scene) {
+    written = true;
+    tx.set(["scenes", id], value);
 }
 
-export async function createScene(
+export function createScene(
     value: string,
     items: Items = {},
     id: ID = crypto.randomUUID()
 ) {
-    await setScene(id, {
+    setScene(id, {
         id,
         value,
         items,
@@ -66,7 +69,7 @@ export async function createScene(
     return id;
 }
 
-export async function  getItem(id: ID): Promise<Item> {
+export async function getItem(id: ID): Promise<Item> {
     return (await kv.get(["items", id])).value as Item;
 }
 
@@ -87,13 +90,14 @@ export async function getItems(ids: ID[]): Promise<ItemMap> {
     return toObject(ids, results);
 }
 
-export async function setItem(id: ID, value: Item) {
-    await kv.set(["items", id], value);
+export function setItem(id: ID, value: Item) {
+    written = true;
+    tx.set(["items", id], value);
 }
 
-export async function createItem(name: string, description?: string) {
+export function createItem(name: string, description?: string) {
     const id: ID = crypto.randomUUID();
-    await setItem(id, {
+    setItem(id, {
         id,
         name,
         description,
@@ -104,6 +108,13 @@ export async function createItem(name: string, description?: string) {
 export async function createOption(id: ID, option: Option) {
     const scene = await getScene(id);
     scene.options.push(option);
-    await setScene(id, scene);
+    setScene(id, scene);
     return scene;
+}
+
+export async function commit() {
+    if (written) {
+        await tx.commit();
+        tx = kv.atomic();
+    }
 }
