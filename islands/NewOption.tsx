@@ -273,30 +273,45 @@ function NewScene(props: {
         }
     }
     function SceneItem(props: {
-        value?: ID;
-        count?: number;
+        value: ID;
+        count: number;
     }) {
         return (
-            <SelectItem
-                state={state}
-                {...props}
-                onChange={(oldId, newId, count) => {
-                    if (oldId) delete scene.items[oldId];
+            <div>
+                <Button onClick={() => {
+                    const newScene = state.value.newScenes[scene.id];
+                    delete newScene.items[props.value];
                     state.value = {
                         ...state.value,
                         newScenes: {
                             ...state.value.newScenes,
-                            [scene.id]: {
-                                ...scene,
-                                items: {
-                                    ...scene.items,
-                                    [newId]: (scene.items[newId] || 0) + count,
+                            [scene.id]: newScene,
+                        }
+                    }
+                }}>
+                    &times;
+                </Button>
+                <SelectItem
+                    state={state}
+                    {...props}
+                    onChange={(oldId, newId, count) => {
+                        if (oldId) delete scene.items[oldId];
+                        state.value = {
+                            ...state.value,
+                            newScenes: {
+                                ...state.value.newScenes,
+                                [scene.id]: {
+                                    ...scene,
+                                    items: {
+                                        ...scene.items,
+                                        [newId]: (scene.items[newId] || 0) + count,
+                                    },
                                 },
                             },
-                        },
-                    }
-                }}
-            />
+                        }
+                    }}
+                />
+                </div>
         );
     }
     const state = props.state;
@@ -358,28 +373,40 @@ function RequiredItems(props: {
     state: State
 }) {
     function RequiredItem(props: {
-        value?: ID;
-        count?: number;
+        value: ID;
+        count: number;
     }) {
         return (
-            <SelectItem
-                state={state}
-                {...props}
-                onChange={(oldId, newId, count) => {
+            <div>
+                <Button onClick={() => {
                     const option = state.value.option;
-                    if (oldId) delete option.requiredItems[oldId];
+                    delete option.requiredItems[props.value];
                     state.value = {
                         ...state.value,
-                        option: {
-                            ...option,
-                            requiredItems: {
-                                ...option.requiredItems,
-                                [newId]: (option.requiredItems[newId] || 0) + count,
+                        option,
+                    }
+                }}>
+                    &times;
+                </Button>
+                <SelectItem
+                    state={state}
+                    {...props}
+                    onChange={(oldId, newId, count) => {
+                        const option = state.value.option;
+                        if (oldId) delete option.requiredItems[oldId];
+                        state.value = {
+                            ...state.value,
+                            option: {
+                                ...option,
+                                requiredItems: {
+                                    ...option.requiredItems,
+                                    [newId]: (option.requiredItems[newId] || 0) + count,
+                                }
                             }
                         }
-                    }
-                }}
-            />
+                    }}
+                />
+            </div>
         );
     }
     const state = props.state;

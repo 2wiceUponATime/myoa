@@ -1,4 +1,4 @@
-import { commit, createItem, createScene, ID, ItemMap, Items, Option, Scene, start } from "@/lib/db.ts";
+import { createItem, createScene, db, ID, ItemMap, Items, Option, Scene, start } from "@/lib/db.ts";
 import Session from "@/lib/session.ts";
 
 type ErrorResponse = {
@@ -224,6 +224,6 @@ export const handler = async (req: Request) => {
     for (const promise of promises) {
         result.push(await promise);
     }
-    commit();
+    db.commit();
     return Response.json(result);
 }

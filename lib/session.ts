@@ -54,7 +54,7 @@ export default class Session {
     has(items: Items) {
         for (const index in items) {
             const item = index as ID;
-            if (this.items[item] < items[item]) {
+            if ((this.items[item] ?? 0) < items[item]) {
                 return false;
             }
         }
