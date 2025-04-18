@@ -171,7 +171,7 @@ async function handle(data: RequestData): Promise<PlayResponse> {
             }
             const requiredItems: Items = option.requiredItems;
             await createItems(requiredItems);
-            const newScenes: Record<ID, ID> = {};
+            const newScenes: Record<ID, Promise<ID>> = {};
             const newOption: Option = {
                 value: option.value,
                 requiredItems: option.requiredItems,
@@ -180,10 +180,12 @@ async function handle(data: RequestData): Promise<PlayResponse> {
                     if (value in data.newScenes) {
                         if (!(value in newScenes)) {
                             const newScene = data.newScenes[value];
-                            await createItems(newScene.items);
-                            newScenes[value] = createScene(newScene.value, newScene.items);
+                            newScenes[value] = createItems(newScene.items).then(
+                                () => createScene(newScene.value, newScene.items)
+                            )
                         }
-                        link.value = newScenes[value];
+                        console.log(newScenes, newScenes[value]);
+                        link.value = await newScenes[value];
                     }
                     return link;
                 }))

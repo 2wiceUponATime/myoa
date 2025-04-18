@@ -106,7 +106,7 @@ class Database {
     }
 }
 
-export const db = new Database(await Deno.openKv(), 1000 * 60);
+export const db = new Database(await Deno.openKv(), 1000 * 60 * 5);
 
 export const start = "bb179099-b85c-4558-8cb9-d658b0d42cce";
 

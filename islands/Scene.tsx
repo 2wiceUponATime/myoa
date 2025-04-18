@@ -53,6 +53,7 @@ export class Client {
         data: PlayRequestData | PlayRequestData[],
         parallel = false
     ): Promise<PlayResponse[]> {
+        await this.ready;
         if (!(data instanceof Array)) {
             data = [data];
         }

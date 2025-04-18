@@ -76,6 +76,7 @@ function SelectItem(props: {
     onChange?: (oldId: ID | undefined, newId: ID, count: number) => unknown;
     value?: ID;
     count?: number;
+    includeNew?: boolean;
 }) {
     const onChange = (isCount = false) => {
         if (select.value == value && !isCount) return;
@@ -86,8 +87,12 @@ function SelectItem(props: {
     }
     const state = props.state;
     let value = props.value;
+    const includeNew = props.includeNew || true;
     useEffect(() => {
-        const items: Record<ID, Item> = Object.assign(JSON.parse(localStorage.items), state.value.newItems);
+        const items: ItemMap = JSON.parse(localStorage.items);
+        if (includeNew) {
+            Object.assign(items, state.value.newItems);
+        }
         select.replaceChildren(...Object.values(items).map(item => {
             value ||= item.id;
             const option = document.createElement("option");
@@ -390,6 +395,7 @@ function RequiredItems(props: {
                 </Button>
                 <SelectItem
                     state={state}
+                    includeNew={false}
                     {...props}
                     onChange={(oldId, newId, count) => {
                         const option = state.value.option;

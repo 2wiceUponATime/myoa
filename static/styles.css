@@ -5,7 +5,7 @@
 
 #main {
     font-family: sans-serif;
-    height: 100vh;
+    min-height: 100dvh;
     line-height: 1.6;
     display: flex;
     flex-direction: column;
@@ -93,8 +93,8 @@ button, input, select {
     position: absolute;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
+    width: 100dvw;
+    height: 100dvh;
     background-color: #00000080;
 }
 
