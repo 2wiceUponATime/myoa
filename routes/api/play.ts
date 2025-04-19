@@ -38,7 +38,7 @@ async function getSceneResponse(session: Session): Promise<SceneResponse> {
     if (scene.options.length == 1 && session.scene.id != start) {
         options = [{
             locked: true,
-            value: "Locked option",
+            value: scene.options[0].value + " (locked)",
         }]
     } else {
         options = scene.options.map(option => {
