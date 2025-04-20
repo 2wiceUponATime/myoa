@@ -115,7 +115,7 @@ if (!(await getScene(start))) {
         "Welcome to Make Your Own Adventure, where the adventure is built by you!",
         {},
         start,
-    )
+    );
 }
 
 export type ID = `${string}-${string}-${string}-${string}-${string}`;

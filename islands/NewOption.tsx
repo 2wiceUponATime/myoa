@@ -427,7 +427,7 @@ function RequiredItems(props: {
                 })}
             </p>
             <Button class="wide" onClick={() => {
-                const items: Record<ID, Item> = Object.assign(JSON.parse(localStorage.items), state.value.newItems);
+                const items: Record<ID, Item> = JSON.parse(localStorage.items);
                 for (const index in items) {
                     if (index in state.value.option.requiredItems) continue;
                     state.value = {
