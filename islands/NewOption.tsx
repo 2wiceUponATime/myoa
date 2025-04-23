@@ -144,6 +144,7 @@ function SelectScene(props: {
     let value = props.value;
     useEffect(() => {
         const scenes = getScenes(state);
+        delete scenes[client.scene!.id];
         select.replaceChildren(...Object.entries(scenes).map(([index, scene]) => {
             const id = index as ID;
             value ||= id;

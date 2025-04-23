@@ -19,6 +19,12 @@ export default function Home() {
                     <Scene />
                 </div>
             </div>
+            <noscript class="popup-background">
+                <div class="popup">
+                    <p>JavaScript is required to play this game.</p>
+                    <p>Please enable JavaScript in your browser settings.</p>
+                </div>
+            </noscript>
         </div>
     );
 }

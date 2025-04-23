@@ -50,7 +50,7 @@ async function getSceneResponse(session: Session): Promise<SceneResponse> {
             } else {
                 return {
                     locked: true,
-                    value: "Locked option",
+                    value: option.value + " (locked)",
                 }
             }
         })

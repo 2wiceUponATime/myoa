@@ -108,6 +108,8 @@ export default class Session {
         if (this.scene.options.length >= 4) {
             throw new PlayError("Too many options");
         }
+        console.log(`New option at scene ${this.scene.id}: ${option.value}
+From: ${this.scene.value}`);
         this.scene = await createOption(this.scene.id, option);
         this.end();
         return this.scene;
