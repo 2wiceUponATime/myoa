@@ -150,6 +150,11 @@ async function handle(data: RequestData): Promise<PlayResponse> {
             if (!option.link.length) {
                 throw new PlayError("Link is required");
             }
+            for (const link of option.link) {
+                if (link.weight < 0) {
+                    throw new PlayError("Link weight cannot be negative");
+                }
+            }
             for (const item of Object.values(data.newItems)) {
                 if (!item.name) {
                     throw new PlayError("Item name is required");

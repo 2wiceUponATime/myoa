@@ -2,7 +2,7 @@ import { signal, Signal } from "@preact/signals";
 import { ID, Item, ItemMap, Option, Scene, SceneMap } from "@/lib/db.ts";
 import { useEffect } from "preact/hooks";
 import { Button, getItemText } from "../lib/helpers.tsx";
-import { client } from "@/islands/Scene.tsx";
+import { client, debug } from "@/islands/Scene.tsx";
 
 type NewOptionState = {
     newItems: ItemMap;
@@ -98,6 +98,9 @@ function SelectItem(props: {
             const option = document.createElement("option");
             option.value = item.id;
             option.innerText = getItemText(item);
+            if (debug) {
+                option.innerText += ` (${item.id})`;
+            }
             return option;
         }));
         if (value) select.value = value;
@@ -151,6 +154,9 @@ function SelectScene(props: {
             const option = document.createElement("option");
             option.value = id;
             option.innerText = scene;
+            if (debug) {
+                option.innerText += ` (${id})`;
+            }
             return option;
         }));
         if (value) select.value = value;

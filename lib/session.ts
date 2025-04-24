@@ -77,7 +77,12 @@ export default class Session {
         for (const [index, count] of Object.entries(option.requiredItems)) {
             this.addItem(index as ID, -count);
         }
-        const totalWeight = option.link.reduce((acc, link) => acc + link.weight, 0);
+        const totalWeight = option.link.reduce((acc, link) => {
+            if (link.weight < 0) {
+                throw new PlayError("Link weight cannot be negative");
+            }
+            return acc + link.weight;
+        }, 0);
         if (totalWeight === 0 || option.link.length === 0) {
             throw new PlayError("No valid links to choose from");
         }
@@ -94,7 +99,7 @@ export default class Session {
             }
         }
         if (!newScene) {
-            unimplemented();
+            unimplemented("Couldn't choose link")
         }
         for (const [index, count] of Object.entries(newScene.items)) {
             this.addItem(index as ID, count);

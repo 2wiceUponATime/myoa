@@ -5,7 +5,6 @@ import { ID, ItemMap } from "@/lib/db.ts";
 import Popup from "@/components/Popup.tsx";
 import { getId, getItemText } from "../lib/helpers.tsx";
 import NewOption from "@/islands/NewOption.tsx";
-import { signal } from "@preact/signals";
 
 const OPTION_NUM = 4;
 
@@ -94,6 +93,7 @@ export class Client {
 }
 
 export let client: Client;
+export let debug: boolean;
 
 function range(length: number): number[] {
     return Array(length).fill(0).map((_, index) => index);
@@ -143,6 +143,9 @@ function startClient() {
         await client.ready;
         const scene = client.scene!;
         sceneText.innerText = scene.value;
+        if (debug) {
+            sceneText.title = scene.id;
+        }
         if (scene.options.length >= OPTION_NUM) {
             newOption.classList.add("hidden");
         } else {
@@ -165,6 +168,9 @@ function startClient() {
             if (item.description) {
                 li.title = item.description;
             }
+            if (debug) {
+                li.title = item.id;
+            }
             return li;
         }))
     }
@@ -174,6 +180,7 @@ function startClient() {
     const newOption = getId("new-option");
     const newOptionPopup = getId("new-option-popup");
     const options = range(OPTION_NUM).map(num => getId("option" + num));
+    const search = new URLSearchParams(location.search);
     let loading = true;
     for (const [index, option] of options.entries()) {
         visible(option, false);
@@ -194,6 +201,7 @@ function startClient() {
     });
     loading = false;
     client = new Client();
+    debug = search.has("debug");
     updateScene();
 }
 
@@ -214,15 +222,7 @@ export default function Scene() {
             <div>Items:</div>
             <ul id="items" />
             <Popup id="new-option-popup">
-                <NewOption state={signal({
-                    newItems: {},
-                    newScenes: {},
-                    option: {
-                        value: "New option",
-                        requiredItems: {},
-                        link: [],
-                    }
-                })}/>
+                <NewOption />
             </Popup>
         </div>
     )
