@@ -1,5 +1,4 @@
 import { createOption, getItems, getScene, ID, ItemMap, Items, Option, Scene, start } from "./db.ts";
-import { unimplemented } from "$std/assert/unimplemented.ts";
 import { PlayError } from "@/routes/api/play.ts";
 
 const SESSION_TIMEOUT = 1000 * 60 * 20;
@@ -99,7 +98,9 @@ export default class Session {
             }
         }
         if (!newScene) {
-            unimplemented("Couldn't choose link")
+            console.error(`Invalid link at scene ${this.scene.id}, option ${optionNumber}
+Total weight: ${totalWeight}, threshold: ${threshold}`);
+            throw new PlayError("Couldn't choose link");
         }
         for (const [index, count] of Object.entries(newScene.items)) {
             this.addItem(index as ID, count);
