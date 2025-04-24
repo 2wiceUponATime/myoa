@@ -189,7 +189,6 @@ async function handle(data: RequestData): Promise<PlayResponse> {
                                 () => createScene(newScene.value, newScene.items)
                             )
                         }
-                        console.log(newScenes, newScenes[value]);
                         link.value = await newScenes[value];
                     }
                     return link;
