@@ -139,8 +139,7 @@ function startClient() {
         }
         return option.hasAttribute("data-locked") || !isVisible(option);
     }
-    async function updateScene() {
-        await client.ready;
+    function updateScene() {
         const scene = client.scene!;
         sceneText.innerText = scene.value;
         if (debug) {
@@ -182,6 +181,7 @@ function startClient() {
     const options = range(OPTION_NUM).map(num => getId("option" + num));
     const search = new URLSearchParams(location.search);
     let loading = true;
+    debug = search.has("debug");
     for (const [index, option] of options.entries()) {
         visible(option, false);
         option.addEventListener("click", async () => {
@@ -192,17 +192,19 @@ function startClient() {
                 session: client.session!,
                 option: index
             });
-            await updateScene();
+            updateScene();
             loading = false;
         });
     }
     newOption.addEventListener("click", () => {
+        if (loading) return;
         newOptionPopup.classList.remove("hidden");
     });
-    loading = false;
     client = new Client();
-    debug = search.has("debug");
-    updateScene();
+    client.ready.then(() => {
+        loading = false;
+        updateScene();
+    });
 }
 
 export default function Scene() {

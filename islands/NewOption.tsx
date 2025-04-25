@@ -147,7 +147,7 @@ function SelectScene(props: {
     let value = props.value;
     useEffect(() => {
         const scenes = getScenes(state);
-        delete scenes[client.scene!.id];
+        if (client) delete scenes[client.scene!.id];
         select.replaceChildren(...Object.entries(scenes).map(([index, scene]) => {
             const id = index as ID;
             value ||= id;
@@ -241,6 +241,7 @@ function OptionLinks(props: {
             ))}
             <Button class="wide" onClick={() => {
                 const scenes = getScenes(state);
+                if (client) delete scenes[client.scene!.id];
                 if (!scenes) return;
                 let newValue: ID;
                 for (const index in scenes) {
@@ -345,6 +346,7 @@ function NewScene(props: {
             </Button>
             <input
                 ref={(el) => { if (el) { description = el; } }}
+                value={scene.value}
                 onInput={update}
                 placeholder="Description"
             />
@@ -457,16 +459,26 @@ function RequiredItems(props: {
 export default function NewOption(props: {
     state?: State,
 }) {
-    const state = props.state ||= signal({
+    const defaultSceneId = crypto.randomUUID();
+    const state: State = props.state ||= signal({
         newItems: {},
-        newScenes: {},
+        newScenes: {
+            [defaultSceneId]: {
+                id: defaultSceneId,
+                value: "New scene description",
+                items: {},
+                options: [],
+            }
+        },
         option: {
             value: "New option",
             requiredItems: {},
-            link: [],
+            link: [{
+                weight: 1,
+                value: defaultSceneId,
+            }],
         }
     });
-
     return (
         <div>
             Option name:&nbsp;
@@ -526,7 +538,7 @@ export default function NewOption(props: {
                     }
                 }
             }}> + </Button>
-            <div><br/>Required items:</div>
+            <div><br/>Required Items (removed from inventory):</div>
             <RequiredItems state={state} />
             <div><br/>Links:</div>
             <OptionLinks state={state} />
