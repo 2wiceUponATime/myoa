@@ -94,6 +94,11 @@ export default class Session {
             cumulative += link.weight;
             if (cumulative >= threshold) {
                 newScene = await getScene(link.value);
+                if (!newScene) {
+                    console.error(`Invalid link at scene ${this.scene.id}, option ${optionNumber}
+Scene ${link.value} does not exist`);
+                    throw new PlayError("Scene does not exist");
+                }
                 break;
             }
         }
