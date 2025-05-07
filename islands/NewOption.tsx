@@ -13,7 +13,7 @@ type NewOptionState = {
 type State = Signal<NewOptionState>;
 
 function getScenes(state: State) {
-    const result: Record<ID, string> = JSON.parse(localStorage.scenes);
+    const result: Record<ID, string> = JSON.parse(localStorage.scenes || "{}");
     for (const [index, scene] of Object.entries(state.value.newScenes)) {
         result[index as ID] = scene.value
     }
