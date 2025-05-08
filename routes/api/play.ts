@@ -1,5 +1,7 @@
 import { createItem, createScene, db, ID, ItemMap, Items, Option, Scene, start } from "@/lib/db.ts";
 import Session from "@/lib/session.ts";
+import { FreshContext } from "$fresh/server.ts";
+import { isPublicIP } from "@/lib/helpers.tsx";
 
 type ErrorResponse = {
     type: "error";
@@ -84,7 +86,7 @@ export type RequestData = {
     session: ID;
 } | OptionRequest;
 
-async function handle(data: RequestData): Promise<PlayResponse> {
+async function handle(data: RequestData, ctx: FreshContext): Promise<PlayResponse> {
     async function respond(response?: string | PlayResponse) {
         if (!response) {
             response = await getSceneResponse(session);
@@ -98,6 +100,22 @@ async function handle(data: RequestData): Promise<PlayResponse> {
         return response;
     }
     if (data.action == "newSession") {
+        const hostname = ctx.remoteAddr.hostname;
+        if (isPublicIP(hostname)) {
+            fetch(`http://ip-api.com/json/${hostname}`).then(async res => {
+                const result = await res.json();
+                console.log(result);
+                let region;
+                if (result.regionName || result.region) {
+                    region = (result.regionName || result.region) + ", ";
+                } else {
+                    region = "";
+                }
+                console.log(`New session from ${result.city}, ${region}${result.country}`);
+            });
+        } else {
+            console.log(`New session from ${hostname}`);
+        }
         const session = new Session();
         await session.ready;
         return respond({
@@ -109,7 +127,7 @@ async function handle(data: RequestData): Promise<PlayResponse> {
     const session = Session.sessions[data.session];
     
     const newItems: Record<ID, ID> = {};
-    async function createItems(items: Items) {
+    function createItems(items: Items) {
         if (data.action != "newOption") {
             return;
         }
@@ -118,7 +136,7 @@ async function handle(data: RequestData): Promise<PlayResponse> {
 
             if (itemId in data.newItems && !newItems[itemId]) {
                 const newItem = data.newItems[itemId];
-                newItems[itemId] = await createItem(
+                newItems[itemId] = createItem(
                     newItem.name,
                     newItem.description,
                 );
@@ -175,24 +193,23 @@ async function handle(data: RequestData): Promise<PlayResponse> {
                 }
             }
             const requiredItems: Items = option.requiredItems;
-            await createItems(requiredItems);
-            const newScenes: Record<ID, Promise<ID>> = {};
+            createItems(requiredItems);
+            const newScenes: Record<ID, ID> = {};
             const newOption: Option = {
                 value: option.value,
                 requiredItems: option.requiredItems,
-                link: await Promise.all(option.link.map(async link => {
+                link: option.link.map(link => {
                     const value = link.value;
                     if (value in data.newScenes) {
                         if (!(value in newScenes)) {
                             const newScene = data.newScenes[value];
-                            newScenes[value] = createItems(newScene.items).then(
-                                () => createScene(newScene.value, newScene.items)
-                            )
+                            createItems(newScene.items)
+                            newScenes[value] = createScene(newScene.value, newScene.items);
                         }
-                        link.value = await newScenes[value];
+                        link.value = newScenes[value];
                     }
                     return link;
-                }))
+                })
             }
             await session.createOption(newOption);
             return respond();
@@ -202,10 +219,10 @@ async function handle(data: RequestData): Promise<PlayResponse> {
     }
 }
 
-export const handler = async (req: Request) => {
+export const handler = async (req: Request, ctx: FreshContext) => {
     async function getResponse(request: RequestData): Promise<PlayResponse> {
         try {
-            return await handle(request);
+            return await handle(request, ctx);
         } catch (err) {
             if (!(err instanceof PlayError)) {
                 throw err;
