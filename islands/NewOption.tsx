@@ -13,7 +13,7 @@ type NewOptionState = {
 type State = Signal<NewOptionState>;
 
 function getScenes(state: State) {
-    const result: Record<ID, string> = JSON.parse(localStorage.scenes);
+    const result: Record<ID, string> = JSON.parse(localStorage.scenes || "{}");
     for (const [index, scene] of Object.entries(state.value.newScenes)) {
         result[index as ID] = scene.value
     }
@@ -89,7 +89,7 @@ function SelectItem(props: {
     let value = props.value;
     const includeNew = props.includeNew || true;
     useEffect(() => {
-        const items: ItemMap = JSON.parse(localStorage.items);
+        const items: ItemMap = JSON.parse(localStorage.items || "{}");
         if (includeNew) {
             Object.assign(items, state.value.newItems);
         }
