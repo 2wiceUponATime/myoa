@@ -1,7 +1,6 @@
 import { createItem, createScene, db, ID, ItemMap, Items, Option, Scene, start } from "@/lib/db.ts";
 import Session from "@/lib/session.ts";
 import { FreshContext } from "$fresh/server.ts";
-import { isPublicIP } from "@/lib/helpers.tsx";
 
 type ErrorResponse = {
     type: "error";
@@ -101,21 +100,20 @@ async function handle(data: RequestData, ctx: FreshContext): Promise<PlayRespons
     }
     if (data.action == "newSession") {
         const hostname = ctx.remoteAddr.hostname;
-        if (isPublicIP(hostname)) {
-            fetch(`http://ip-api.com/json/${hostname}`).then(async res => {
-                const result = await res.json();
-                console.log(result);
-                let region;
-                if (result.regionName || result.region) {
-                    region = (result.regionName || result.region) + ", ";
-                } else {
-                    region = "";
-                }
-                console.log(`New session from ${result.city}, ${region}${result.country}`);
-            });
-        } else {
-            console.log(`New session from ${hostname}`);
-        }
+        fetch(`http://ip-api.com/json/${hostname}`).then(async res => {
+            const result = await res.json();
+            if (result.status != "success") {
+                console.log(`New session from ${hostname}`);
+                return;
+            }
+            let region;
+            if (result.regionName || result.region) {
+                region = (result.regionName || result.region) + ", ";
+            } else {
+                region = "";
+            }
+            console.log(`New session from ${result.city}, ${region}${result.country}`);
+        });
         const session = new Session();
         await session.ready;
         return respond({

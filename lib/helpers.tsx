@@ -39,28 +39,3 @@ export function Button(props: {
         </button>
     );
 }
-
-function isPrivateIPv4(ip: string): boolean {
-    const parts = ip.split('.').map(Number);
-    return (
-      parts[0] === 10 ||
-      (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) ||
-      (parts[0] === 192 && parts[1] === 168) ||
-      parts[0] === 127
-    );
-  }
-  
-  function isPrivateIPv6(ip: string): boolean {
-    return ip === '::1' || ip.startsWith('fc') || ip.startsWith('fd');
-  }
-  
-  export function isPublicIP(ip: string): boolean {
-    if (ip.includes('.')) {
-      return !isPrivateIPv4(ip);
-    }
-    if (ip.includes(':')) {
-      return !isPrivateIPv6(ip);
-    }
-    return false;
-  }
-  
