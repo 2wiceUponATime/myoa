@@ -36,7 +36,7 @@ export type PlayResponse = ErrorResponse | SceneResponse | NewSessionResponse;
 async function getSceneResponse(session: Session): Promise<SceneResponse> {
     const scene = session.scene;
     let options: OptionResponse[];
-    if (scene.options.length == 1 && session.scene.id != start) {
+    if (scene.options.length == 1 && scene.options[0].value.toLowerCase().trim() != "continue" && session.scene.id != start) {
         options = [{
             locked: true,
             value: scene.options[0].value + " (locked)",
