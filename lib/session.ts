@@ -65,8 +65,9 @@ export default class Session {
     }
 
     async choose(optionNumber: number) {
-        if (this.scene.options.length <= 1 && this.scene.id != start) {
-            throw new PlayError("Cannot choose from 1 or 0 options");
+        const options = this.scene.options;
+        if (options.length == 1 && options[0].value.toLowerCase().trim() != "continue" && this.scene.id != start) {
+            throw new PlayError("Cannot choose from 1 option");
         }
         this.activity = Date.now();
         const option = this.scene.options[optionNumber];
